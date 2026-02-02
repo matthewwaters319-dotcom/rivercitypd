@@ -1,3 +1,80 @@
+// Prevent code inspection and source viewing
+(() => {
+  // Disable right-click context menu
+  document.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    return false;
+  });
+
+  // Disable developer tools keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    // F12 - Open Dev Tools
+    if (e.key === 'F12') {
+      e.preventDefault();
+      return false;
+    }
+    // Ctrl+Shift+I - Inspect Element
+    if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+      e.preventDefault();
+      return false;
+    }
+    // Ctrl+Shift+J - Console
+    if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+      e.preventDefault();
+      return false;
+    }
+    // Ctrl+Shift+C - Inspect Element (alternate)
+    if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+      e.preventDefault();
+      return false;
+    }
+    // Ctrl+U - View Source
+    if (e.ctrlKey && e.key === 'u') {
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  // Disable selection of text
+  document.addEventListener('selectstart', (e) => {
+    e.preventDefault();
+    return false;
+  });
+
+  // Detect if developer tools are open
+  let devtools = { open: false };
+  const threshold = 160;
+
+  setInterval(() => {
+    if (window.outerHeight - window.innerHeight > threshold ||
+        window.outerWidth - window.innerWidth > threshold) {
+      if (!devtools.open) {
+        devtools.open = true;
+        document.body.innerHTML = '';
+        window.location.href = 'about:blank';
+      }
+    } else {
+      devtools.open = false;
+    }
+  }, 500);
+
+  // Prevent console access
+  const disabledFunc = () => {
+    throw new Error('Debugging is not allowed');
+  };
+
+  console.log = disabledFunc;
+  console.debug = disabledFunc;
+  console.info = disabledFunc;
+  console.warn = disabledFunc;
+  console.error = disabledFunc;
+
+  // Block debugger statement
+  if (window.devtoolsDetected) {
+    window.location.href = 'about:blank';
+  }
+})();
+
 const year = document.querySelector("#year");
 if (year) {
   year.textContent = new Date().getFullYear();
