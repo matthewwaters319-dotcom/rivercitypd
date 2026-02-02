@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portfolio</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="starfield" aria-hidden="true"></div>
+    <header class="site-header">
+      <div class="nav">
+        <span class="logo">ch20s portfolio</span>
+        <nav class="nav-links">
+          <a href="#home">home</a>
+          <a href="#work">past work</a>
+          <a href="#reviews">reviews</a>
+          <a href="#contact">contact</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="home">
+      <section class="hero">
+        <div class="hero-profile">
+          <div class="profile-photo" role="img" aria-label="Profile photo"></div>
+          <div class="profile-text">
+            <h1>ch20s</h1>
+            <p>Designer</p>
+          </div>
+        </div>
+
+        <div class="hero-actions">
+          <a class="btn ghost" href="#work">Past Work</a>
+          <a class="btn primary" href="https://discord.gg/95Xures5Bh" target="_blank" rel="noreferrer">
+            Join
+          </a>
+        </div>
+
+        <div class="floating-cards">
+          <article class="mini-card now-playing">
+            <div class="mini-head">Now Playing</div>
+            <div class="mini-body">
+              <div class="album" role="img" aria-label="Back in the Saddle album art"></div>
+              <div>
+                <h3>Back in the Saddle</h3>
+                <p>Luke Combs</p>
+                <audio class="audio-player" controls preload="none">
+                  <source src="back-in-the-saddle.mp3" type="audio/mpeg" />
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
+            </div>
+          </article>
+
+          <article class="mini-card discord">
+            <div class="mini-head">Discord</div>
+            <div class="mini-body">
+              <img class="discord-logo" src="assets/axis-logo.png" alt="Discord server logo" />
+              <div>
+                <h3>Axis's Design Hub</h3>
+                <p>Members: <span id="discord-members">Loading...</span></p>
+              </div>
+              <a class="join" href="https://discord.gg/95Xures5Bh" target="_blank" rel="noreferrer">
+                Join
+              </a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="work" class="section">
+        <div class="section-header">
+          <h2>Past Work</h2>
+          <p>Selected projects</p>
+        </div>
+        <div class="portfolio-scroll">
+          <div class="portfolio-item">
+            <img src="portfolio/Axis Customs Join Now Watermarked.png" alt="Axis Customs" />
+          </div>
+          <div class="portfolio-item">
+            <img src="portfolio/Radiant Customs Banner Showcase.png" alt="Radiant Customs Banner" />
+          </div>
+          <div class="portfolio-item">
+            <img src="portfolio/Radiant Customs Join Now Watermark.png" alt="Radiant Customs Join Now" />
+          </div>
+          <div class="portfolio-item">
+            <img src="portfolio/LightHouseLogo_Upscaled_Watermarked.png" alt="LightHouse Logo" />
+          </div>
+          <div class="portfolio-item">
+            <img src="portfolio/MilwaukeeLogoWatermarked.png" alt="Milwaukee Logo" />
+          </div>
+          <div class="portfolio-item">
+            <img src="portfolio/SeattleRoleplayWatermarked.png" alt="Seattle Roleplay" />
+          </div>
+        </div>
+      </section>
+
+      <section id="reviews" class="section">
+        <div class="reviews-header">
+          <h2>Client Reviews</h2>
+          <span class="review-count">2</span>
+        </div>
+        <div class="reviews-scroll">
+          <article class="review-card">
+            <div class="review-top">
+              <div class="review-avatar"></div>
+              <div>
+                <h3>chipsalsa1234</h3>
+                <div class="stars">
+                  <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                </div>
+              </div>
+            </div>
+            <p class="review-text">"Great uniform, would order again"</p>
+            <div class="review-footer">
+              <span class="verified">VERIFIED CLIENT</span>
+              <span class="review-date">2/1/2026</span>
+            </div>
+          </article>
+          <article class="review-card">
+            <div class="review-top">
+              <div class="review-avatar"></div>
+              <div>
+                <h3>rockers6879</h3>
+                <div class="stars">
+                  <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                </div>
+              </div>
+            </div>
+            <p class="review-text">"Great Logo, very sleek, quick delivery."</p>
+            <div class="review-footer">
+              <span class="verified">VERIFIED CLIENT</span>
+              <span class="review-date">2/1/2026</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="contact" class="section contact-section">
+        <h2>Contact Me</h2>
+        <form class="contact-form" id="contactForm">
+          <input type="text" name="name" placeholder="Your Name" required />
+          <input type="text" name="discord" placeholder="Discord Username" required />
+          <textarea name="message" placeholder="What do you need?" rows="5" required></textarea>
+          <button type="submit" class="btn primary">Send Message</button>
+        </form>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span id="year"></span> ch20s. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
