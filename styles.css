@@ -576,6 +576,7 @@ main {
   opacity: 0;
   transition: opacity 0.3s ease;
   z-index: 1;
+  pointer-events: none;
 }
 
 .portfolio-item:hover::before {
@@ -877,6 +878,9 @@ main {
 .portfolio-img {
   cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
 }
 
 .portfolio-img:hover {

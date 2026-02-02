@@ -8,6 +8,11 @@
 
   // Disable developer tools keyboard shortcuts
   document.addEventListener('keydown', (e) => {
+    // Allow Escape key for modal
+    if (e.key === 'Escape') {
+      return true;
+    }
+    
     // F12 - Open Dev Tools
     if (e.key === 'F12') {
       e.preventDefault();
@@ -35,8 +40,12 @@
     }
   });
 
-  // Disable selection of text
+  // Disable selection of text (but allow clicks on portfolio images)
   document.addEventListener('selectstart', (e) => {
+    // Allow selection for specific elements if needed
+    if (e.target.classList && e.target.classList.contains('portfolio-img')) {
+      return true;
+    }
     e.preventDefault();
     return false;
   });
