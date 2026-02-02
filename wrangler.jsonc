@@ -1,9 +1,0 @@
-{
-  "name": "portfolio-website",
-  "main": "worker.js",
-  "compatibility_date": "2026-02-01",
-  "assets": {
-    "directory": ".",
-    "binding": "ASSETS"
-  }
-}
