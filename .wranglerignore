@@ -1,0 +1,7 @@
+src/
+.git/
+.github/
+node_modules/
+*.md
+wrangler.toml
+.wranglerignore
