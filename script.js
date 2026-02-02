@@ -6,7 +6,10 @@ if (year) {
 const audio = document.querySelector(".audio-player");
 if (audio) {
   const tryPlay = () => {
-    audio.play().catch(() => {
+    audio.play().then(() => {
+      // Unmute after autoplay starts (browsers require muted autoplay)
+      audio.muted = false;
+    }).catch(() => {
       audio.classList.add("needs-play");
     });
   };
