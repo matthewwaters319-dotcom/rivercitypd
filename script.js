@@ -378,4 +378,49 @@ if (contactForm) {
   });
 }
 
+// Image Modal Functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('imageModal');
+  const modalImg = document.getElementById('modalImage');
+  const modalClose = document.querySelector('.modal-close');
+  const portfolioImages = document.querySelectorAll('.portfolio-img');
+
+  // Open modal when clicking on portfolio image
+  portfolioImages.forEach(img => {
+    img.addEventListener('click', function(e) {
+      e.stopPropagation();
+      modal.classList.add('active');
+      modalImg.src = this.src;
+      modalImg.alt = this.alt;
+      document.body.style.overflow = 'hidden';
+    });
+  });
+
+  // Close modal when clicking the X
+  if (modalClose) {
+    modalClose.addEventListener('click', function() {
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+    });
+  }
+
+  // Close modal when clicking outside the image
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+  }
+
+  // Close modal with Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  });
+});
+
 // hi
