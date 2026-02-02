@@ -271,20 +271,13 @@ if (contactForm) {
     submitBtn.textContent = "Sending...";
 
     try {
-      const res = await fetch("https://discord.com/api/webhooks/1467580910525223254/_RSiDZB51xkKDWpybdRMoOVtU1UeWX-SjweqgZaQt8TSPSqLGExSS85ADlCsHLcjZOiv", {
+      const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          embeds: [{
-            title: "New Contact Request",
-            color: 0xff2a55,
-            fields: [
-              { name: "Name", value: name, inline: true },
-              { name: "Discord", value: discord, inline: true },
-              { name: "Message", value: message }
-            ],
-            timestamp: new Date().toISOString()
-          }]
+          name: name,
+          discord: discord,
+          message: message
         })
       });
 
