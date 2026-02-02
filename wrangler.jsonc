@@ -1,0 +1,8 @@
+{
+  "name": "portfolio-website",
+  "compatibility_date": "2026-02-01",
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS"
+  }
+}
