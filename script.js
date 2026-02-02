@@ -3,6 +3,75 @@ if (year) {
   year.textContent = new Date().getFullYear();
 }
 
+// Loading Screen
+window.addEventListener('load', () => {
+  const loadingScreen = document.querySelector('.loading-screen');
+  setTimeout(() => {
+    loadingScreen.classList.add('hidden');
+    document.body.classList.add('loaded');
+  }, 1500);
+});
+
+// Scroll Animation Observer
+const observerOptions = {
+  threshold: 0.1,
+  rootMargin: '0px 0px -50px 0px'
+};
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'translateY(0)';
+    }
+  });
+}, observerOptions);
+
+// Parallax effect for starfield
+let ticking = false;
+window.addEventListener('scroll', () => {
+  if (!ticking) {
+    window.requestAnimationFrame(() => {
+      const starfield = document.querySelector('.starfield');
+      const scrolled = window.pageYOffset;
+      if (starfield) {
+        starfield.style.transform = `translateY(${scrolled * 0.3}px)`;
+      }
+      ticking = false;
+    });
+    ticking = true;
+  }
+});
+
+// Observe sections for scroll animations
+document.addEventListener('DOMContentLoaded', () => {
+  const sections = document.querySelectorAll('.section');
+  sections.forEach((section, index) => {
+    section.style.opacity = '0';
+    section.style.transform = 'translateY(30px)';
+    section.style.transition = `opacity 0.8s ease ${index * 0.1}s, transform 0.8s ease ${index * 0.1}s`;
+    observer.observe(section);
+  });
+
+  // Observe portfolio items
+  const portfolioItems = document.querySelectorAll('.portfolio-item');
+  portfolioItems.forEach((item, index) => {
+    item.style.opacity = '0';
+    item.style.transform = 'scale(0.95)';
+    item.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
+    observer.observe(item);
+  });
+
+  // Observe review cards
+  const reviewCards = document.querySelectorAll('.review-card');
+  reviewCards.forEach((card, index) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateX(-20px)';
+    card.style.transition = `opacity 0.7s ease ${index * 0.15}s, transform 0.7s ease ${index * 0.15}s`;
+    observer.observe(card);
+  });
+});
+
 const audio = document.querySelector(".audio-player");
 if (audio) {
   const tryPlay = () => {

@@ -8,6 +8,16 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <!-- Loading Screen -->
+    <div class="loading-screen">
+      <div class="loader">
+        <div class="loader-ring"></div>
+        <div class="loader-ring"></div>
+        <div class="loader-ring"></div>
+        <div class="loader-text">ch20s</div>
+      </div>
+    </div>
+
     <div class="starfield" aria-hidden="true"></div>
     <header class="site-header">
       <div class="nav">
@@ -23,7 +33,7 @@
 
     <main id="home">
       <section class="hero">
-        <div class="hero-profile">
+        <div class="hero-profile fade-in">
           <div class="profile-photo" role="img" aria-label="Profile photo"></div>
           <div class="profile-text">
             <h1>ch20s</h1>
@@ -31,14 +41,14 @@
           </div>
         </div>
 
-        <div class="hero-actions">
+        <div class="hero-actions fade-in" style="animation-delay: 0.2s;">
           <a class="btn ghost" href="#work">Past Work</a>
           <a class="btn primary" href="https://discord.gg/95Xures5Bh" target="_blank" rel="noreferrer">
             Join
           </a>
         </div>
 
-        <div class="floating-cards">
+        <div class="floating-cards fade-in" style="animation-delay: 0.4s;">
           <article class="mini-card now-playing">
             <div class="mini-head">Now Playing</div>
             <div class="mini-body">
