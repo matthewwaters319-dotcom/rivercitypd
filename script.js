@@ -31,6 +31,19 @@ if (membersEl) {
     });
 }
 
+const membersEl2 = document.querySelector("#discord-members-2");
+if (membersEl2) {
+  fetch("https://discord.com/api/v9/invites/f52U3sFTw3?with_counts=true")
+    .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+    .then((data) => {
+      const count = data.approximate_member_count;
+      membersEl2.textContent = typeof count === "number" ? count.toLocaleString() : "--";
+    })
+    .catch(() => {
+      membersEl2.textContent = "--";
+    });
+}
+
 const contactForm = document.querySelector("#contactForm");
 if (contactForm) {
   contactForm.addEventListener("submit", async (e) => {
