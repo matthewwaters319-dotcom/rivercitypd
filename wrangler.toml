@@ -2,8 +2,8 @@ name = "portfolio-website"
 main = "worker.js"
 compatibility_date = "2026-02-01"
 
-[env.production]
-vars = { DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1467719934569087018/uj9uNZZPItb1vZj6H23nIZegM7_tacsZtCrsOua3nLRwJaYdZNXTOoxDhFhr9p9QsrOp" }
+[vars]
+DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1467719934569087018/uj9uNZZPItb1vZj6H23nIZegM7_tacsZtCrsOua3nLRwJaYdZNXTOoxDhFhr9p9QsrOp"
 
 [assets]
 directory = "."
