@@ -1,0 +1,10 @@
+{
+  "users": [
+    {
+      "username": "testing",
+      "password": "testing",
+      "name": "Kasey Krivan",
+      "role": "Officer"
+    }
+  ]
+}

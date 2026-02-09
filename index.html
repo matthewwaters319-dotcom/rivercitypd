@@ -1,203 +1,122 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Portfolio</title>
-    
-    <!-- Open Graph / Discord Embed -->
-    <meta property="og:title" content="ch20s Portfolio" />
-    <meta property="og:description" content="This axis (ch20s) portfolio! Feel free to commission me via the form." />
-    <meta property="og:image" content="https://your-website-url.com/assets/axis-logo.png" />
-    <meta property="og:type" content="website" />
-    <meta name="theme-color" content="#5865F2" />
-    
-    <link rel="icon" type="image/png" href="assets/axis-logo.png" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RCPD CAD System</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <!-- Loading Screen -->
-    <div class="loading-screen">
-      <div class="loader">
-        <div class="loader-ring"></div>
-        <div class="loader-ring"></div>
-        <div class="loader-ring"></div>
-        <div class="loader-text">ch20s</div>
-      </div>
+    <div class="app" id="app">
+      <header class="topbar">
+        <div class="brand">
+          <div class="badge">RCPD</div>
+          <div>
+            <div class="title">River City Police Department</div>
+            <div class="subtitle">Computer-Aided Dispatch</div>
+          </div>
+        </div>
+        <div class="system-status">
+          <div class="status-label">Terminal</div>
+          <div class="status-value" id="terminal-id">RC-03</div>
+          <div class="status-label">Local Time</div>
+          <div class="status-value" id="local-time">--:--</div>
+        </div>
+        <div class="session" id="session"></div>
+      </header>
+
+      <main class="content" id="content">
+        <section class="panel" id="login-panel">
+          <h1>Secure Login</h1>
+          <p class="muted">
+            Use the credentials issued by RCPD IT. Self-registration is disabled.
+          </p>
+          <form id="login-form">
+            <label>
+              Username
+              <input type="text" id="username" required autocomplete="username" />
+            </label>
+            <label>
+              Password
+              <input type="password" id="password" required autocomplete="current-password" />
+            </label>
+            <button type="submit">Sign In</button>
+            <div class="error" id="login-error" aria-live="polite"></div>
+          </form>
+        </section>
+
+        <section class="panel hidden" id="dashboard-panel">
+          <div class="dashboard-header">
+            <div>
+              <h1>Records Console</h1>
+              <p class="muted">Officer-only reporting workspace.</p>
+            </div>
+            <button class="secondary" id="logout-btn">Sign Out</button>
+          </div>
+
+          <div class="cad-toolbar">
+            <div class="cad-actions">
+              <button class="primary" data-report="General Occurrence Report">New Occurrence</button>
+              <button class="primary" data-report="Arrest Report">New Arrest</button>
+              <button class="primary" data-report="Vehicle Citation">New Vehicle Citation</button>
+              <button class="ghost" data-report="Written Warning">Written Warning</button>
+              <button class="ghost" data-report="Search Warrant">Search Warrant</button>
+              <button class="ghost" data-report="Arrest Warrant">Arrest Warrant</button>
+            </div>
+            <label class="cad-search">
+              <span class="sr-only">Search reports</span>
+              <input type="search" id="report-search" placeholder="Search reports..." />
+            </label>
+          </div>
+
+          <div class="cad-panel">
+            <div class="panel-header">
+              <h2>Report Log</h2>
+              <div class="panel-meta">Records cleared after browser reset.</div>
+            </div>
+            <div class="table-wrapper">
+              <table class="cad-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th>Officer</th>
+                    <th>Summary</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="report-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="reporting">
+            <h2>Report Templates</h2>
+            <p class="muted">Select a report type to open a new form.</p>
+            <div class="report-buttons" id="report-buttons"></div>
+          </div>
+        </section>
+
+        <section class="panel hidden" id="report-panel">
+          <div class="dashboard-header">
+            <div>
+              <h1 id="report-title">Report</h1>
+              <p class="muted" id="report-subtitle">Complete all required fields.</p>
+            </div>
+            <button class="secondary" id="back-btn">Back to Dashboard</button>
+          </div>
+          <form id="report-form">
+            <div class="form-grid" id="report-fields"></div>
+            <div class="form-actions">
+              <button type="submit">Save Report</button>
+              <button type="button" class="secondary" id="cancel-report">Cancel</button>
+            </div>
+            <div class="success" id="report-success" aria-live="polite"></div>
+          </form>
+        </section>
+      </main>
     </div>
-
-    <!-- Particle Canvas -->
-    <canvas id="particleCanvas"></canvas>
-
-    <div class="starfield" aria-hidden="true"></div>
-
-    <header class="site-header">
-      <div class="nav">
-        <span class="logo">ch20s portfolio</span>
-        <nav class="nav-links">
-          <a href="#home">home</a>
-          <a href="#work">past work</a>
-          <a href="#reviews">reviews</a>
-          <a href="#contact">contact</a>
-        </nav>
-      </div>
-    </header>
-
-    <main id="home">
-      <section class="hero">
-        <div class="hero-profile fade-in">
-          <div class="profile-photo" role="img" aria-label="Profile photo"></div>
-          <div class="profile-text">
-            <h1>ch20s</h1>
-            <p>Designer</p>
-          </div>
-        </div>
-
-        <div class="hero-actions fade-in" style="animation-delay: 0.2s;">
-          <a class="btn ghost" href="#work">Past Work</a>
-          <a class="btn primary" href="https://discord.gg/95Xures5Bh" target="_blank" rel="noreferrer">
-            Join
-          </a>
-        </div>
-
-        <div class="floating-cards fade-in" style="animation-delay: 0.4s;">
-          <article class="mini-card now-playing">
-            <div class="mini-head">Now Playing</div>
-            <div class="mini-body">
-              <div class="album" role="img" aria-label="Back in the Saddle album art"></div>
-              <div>
-                <h3>Back in the Saddle</h3>
-                <p>Luke Combs</p>
-                <audio class="audio-player" controls preload="auto" autoplay muted>
-                  <source src="back-in-the-saddle.mp3" type="audio/mpeg" />
-                  Your browser does not support the audio element.
-                </audio>
-              </div>
-            </div>
-          </article>
-
-          <article class="mini-card discord">
-            <div class="mini-head">Discord</div>
-            <div class="mini-body">
-              <img class="discord-logo" src="assets/axis-logo.png" alt="Discord server logo" />
-              <div>
-                <h3>Axis's Design Hub - Owner</h3>
-                <p>Members: <span id="discord-members">Loading...</span></p>
-              </div>
-              <a class="join" href="https://discord.gg/95Xures5Bh" target="_blank" rel="noreferrer">
-                Join
-              </a>
-            </div>
-          </article>
-
-          <article class="mini-card discord">
-            <div class="mini-head">Discord</div>
-            <div class="mini-body">
-              <img class="discord-logo" src="assets/server-logo-2.png" alt="Discord server logo" />
-              <div>
-                <h3>Radiant Customs - Co Executive</h3>
-                <p>Members: <span id="discord-members-2">Loading...</span></p>
-              </div>
-              <a class="join" href="https://discord.gg/f52U3sFTw3" target="_blank" rel="noreferrer">
-                Join
-              </a>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section id="work" class="section">
-        <div class="section-header">
-          <h2>Past Work</h2>
-          <p>Selected projects</p>
-        </div>
-        <div class="portfolio-scroll">
-          <div class="portfolio-item">
-            <img src="portfolio/Axis Customs Join Now Watermarked.png" alt="Axis Customs" class="portfolio-img" />
-          </div>
-          <div class="portfolio-item">
-            <img src="portfolio/Radiant Customs Banner Showcase.png" alt="Radiant Customs Banner" class="portfolio-img" />
-          </div>
-          <div class="portfolio-item">
-            <img src="portfolio/Radiant Customs Join Now Watermark.png" alt="Radiant Customs Join Now" class="portfolio-img" />
-          </div>
-          <div class="portfolio-item">
-            <img src="portfolio/Photo1.png" alt="Photo 1" class="portfolio-img" />
-          </div>
-          <div class="portfolio-item">
-            <img src="portfolio/Photo2.png" alt="Photo 2" class="portfolio-img" />
-          </div>
-          <div class="portfolio-item">
-            <img src="portfolio/DeerLogo.Watermarked.png" alt="Deer Logo" class="portfolio-img" />
-          </div>
-          <div class="portfolio-item">
-            <img src="portfolio/100MembersRadiantWatermarked.png" alt="100 Members Radiant" class="portfolio-img" />
-          </div>
-        </div>
-      </section>
-
-      <section id="reviews" class="section">
-        <div class="reviews-header">
-          <h2>Client Reviews</h2>
-          <span class="review-count">2</span>
-        </div>
-        <div class="reviews-scroll">
-          <article class="review-card">
-            <div class="review-top">
-              <div class="review-avatar"></div>
-              <div>
-                <h3>chipsalsa1234</h3>
-                <div class="stars">
-                  <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-                </div>
-              </div>
-            </div>
-            <p class="review-text">"Great uniform, would order again"</p>
-            <div class="review-footer">
-              <span class="verified">VERIFIED CLIENT</span>
-              <span class="review-date">2/1/2026</span>
-            </div>
-          </article>
-          <article class="review-card">
-            <div class="review-top">
-              <div class="review-avatar"></div>
-              <div>
-                <h3>rockers6879</h3>
-                <div class="stars">
-                  <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-                </div>
-              </div>
-            </div>
-            <p class="review-text">"Great Logo, very sleek, quick delivery."</p>
-            <div class="review-footer">
-              <span class="verified">VERIFIED CLIENT</span>
-              <span class="review-date">2/1/2026</span>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section id="contact" class="section contact-section">
-        <h2>Contact Me</h2>
-        <form class="contact-form" id="contactForm">
-          <input type="text" name="name" placeholder="Your Name" required />
-          <input type="text" name="discord" placeholder="Discord Username" required />
-          <textarea name="message" placeholder="What do you need?" rows="5" required></textarea>
-          <button type="submit" class="btn primary">Send Message</button>
-        </form>
-      </section>
-    </main>
-
-    <footer class="footer">
-      <p>© <span id="year"></span> ch20s. All rights reserved.</p>
-    </footer>
-
-    <!-- Image Modal -->
-    <div id="imageModal" class="modal">
-      <span class="modal-close">&times;</span>
-      <img class="modal-content" id="modalImage" alt="Enlarged view">
-    </div>
-
-    <script src="script.js"></script>
+    <script src="app.js"></script>
   </body>
 </html>
