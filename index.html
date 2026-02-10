@@ -10,17 +10,32 @@
     <div class="app" id="app">
       <header class="topbar">
         <div class="brand">
-          <div class="badge">RCPD</div>
+          <div class="badge">
+            <img
+              src="https://media.discordapp.net/attachments/1403175301445582892/1470564702571724830/RCPD_Logo.png?ex=698bc19a&is=698a701a&hm=4c55aa98f24620bfeba13d97ed0667203c7533c40f3d106ff2342ff03863624b&=&format=webp&quality=lossless&width=138&height=133"
+              alt="RCPD logo"
+            />
+          </div>
           <div>
             <div class="title">River City Police Department</div>
             <div class="subtitle">Computer-Aided Dispatch</div>
           </div>
         </div>
         <div class="system-status">
-          <div class="status-label">Terminal</div>
-          <div class="status-value" id="terminal-id">RC-03</div>
+          <div class="status-label">Callsign</div>
+          <div class="status-value" id="terminal-id">UNASSIGNED</div>
           <div class="status-label">Local Time</div>
           <div class="status-value" id="local-time">--:--</div>
+        </div>
+        <div class="command-bar hidden" id="command-bar">
+          <label class="sr-only" for="command-input">Command</label>
+          <input
+            type="text"
+            id="command-input"
+            placeholder="Command"
+            autocomplete="off"
+          />
+          <div class="command-status" id="command-status"></div>
         </div>
         <div class="session" id="session"></div>
       </header>
@@ -29,7 +44,7 @@
         <section class="panel" id="login-panel">
           <h1>Secure Login</h1>
           <p class="muted">
-            Use the credentials issued by RCPD IT. Self-registration is disabled.
+            Use the credentials issued by RCPD Administration.
           </p>
           <form id="login-form">
             <label>
@@ -49,9 +64,12 @@
           <div class="dashboard-header">
             <div>
               <h1>Records Console</h1>
-              <p class="muted">Officer-only reporting workspace.</p>
+              <p class="muted">Computer Aided Dispatch.</p>
             </div>
-            <button class="secondary" id="logout-btn">Sign Out</button>
+            <div class="header-actions">
+              <button class="secondary hidden" id="audit-btn">Audit Log</button>
+              <button class="secondary" id="logout-btn">Sign Out</button>
+            </div>
           </div>
 
           <div class="cad-toolbar">
@@ -115,8 +133,54 @@
             <div class="success" id="report-success" aria-live="polite"></div>
           </form>
         </section>
+
+        <section class="panel hidden" id="audit-panel">
+          <div class="dashboard-header">
+            <div>
+              <h1>Audit Log</h1>
+              <p class="muted">Admin-only activity history.</p>
+            </div>
+            <button class="secondary" id="audit-back-btn">Back to Dashboard</button>
+          </div>
+          <div class="cad-panel">
+            <div class="panel-header">
+              <h2>Activity</h2>
+              <div class="panel-meta">Local session log.</div>
+            </div>
+            <div class="table-wrapper">
+              <table class="cad-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Detail</th>
+                  </tr>
+                </thead>
+                <tbody id="audit-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
+    <div class="modal hidden" id="report-modal" role="dialog" aria-modal="true">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <div class="modal-title" id="modal-title">Report</div>
+            <div class="modal-meta" id="modal-meta"></div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="secondary" id="modal-export">Export PDF</button>
+            <button type="button" class="primary" id="modal-approve">Approve</button>
+            <button type="button" class="secondary" id="modal-close">Close</button>
+          </div>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

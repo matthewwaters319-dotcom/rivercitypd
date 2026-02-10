@@ -11,10 +11,25 @@ const reportSuccess = document.getElementById("report-success");
 const sessionEl = document.getElementById("session");
 const reportTableBody = document.getElementById("report-table-body");
 const logoutBtn = document.getElementById("logout-btn");
+const auditBtn = document.getElementById("audit-btn");
 const backBtn = document.getElementById("back-btn");
 const cancelReport = document.getElementById("cancel-report");
 const localTimeEl = document.getElementById("local-time");
 const reportSearch = document.getElementById("report-search");
+const terminalIdEl = document.getElementById("terminal-id");
+const reportModal = document.getElementById("report-modal");
+const modalTitle = document.getElementById("modal-title");
+const modalMeta = document.getElementById("modal-meta");
+const modalBody = document.getElementById("modal-body");
+const modalClose = document.getElementById("modal-close");
+const modalApprove = document.getElementById("modal-approve");
+const modalExport = document.getElementById("modal-export");
+const commandBar = document.getElementById("command-bar");
+const commandInput = document.getElementById("command-input");
+const commandStatus = document.getElementById("command-status");
+const auditPanel = document.getElementById("audit-panel");
+const auditBackBtn = document.getElementById("audit-back-btn");
+const auditTableBody = document.getElementById("audit-table-body");
 
 const shiftStatus = {
   callTaker: document.getElementById("shift-calltaker"),
@@ -35,7 +50,6 @@ const REPORTS = [
 
 const REPORT_FIELDS = {
   "Tresspass Notice": [
-    { label: "Notice ID", name: "noticeId", type: "text" },
     { label: "Issued By", name: "issuedBy", type: "text" },
     { label: "Recipient Name", name: "recipient", type: "text" },
     { label: "Location", name: "location", type: "text" },
@@ -53,7 +67,6 @@ const REPORT_FIELDS = {
     { label: "Narrative", name: "narrative", type: "textarea" },
   ],
   "Written Warning": [
-    { label: "Warning ID", name: "warningId", type: "text" },
     { label: "Officer", name: "officer", type: "text" },
     { label: "Subject", name: "subject", type: "text" },
     { label: "Violation", name: "violation", type: "text" },
@@ -61,7 +74,6 @@ const REPORT_FIELDS = {
     { label: "Notes", name: "notes", type: "textarea" },
   ],
   "Vehicle Citation": [
-    { label: "Citation Number", name: "citationNumber", type: "text" },
     { label: "Officer", name: "officer", type: "text" },
     { label: "Driver", name: "driver", type: "text" },
     { label: "Plate", name: "plate", type: "text" },
@@ -70,7 +82,6 @@ const REPORT_FIELDS = {
     { label: "Notes", name: "notes", type: "textarea" },
   ],
   "General Citation": [
-    { label: "Citation Number", name: "citationNumber", type: "text" },
     { label: "Officer", name: "officer", type: "text" },
     { label: "Recipient", name: "recipient", type: "text" },
     { label: "Violation", name: "violation", type: "text" },
@@ -79,7 +90,6 @@ const REPORT_FIELDS = {
     { label: "Notes", name: "notes", type: "textarea" },
   ],
   "Search Warrant": [
-    { label: "Warrant ID", name: "warrantId", type: "text" },
     { label: "Judge", name: "judge", type: "text" },
     { label: "Affiant", name: "affiant", type: "text" },
     { label: "Location", name: "location", type: "text" },
@@ -87,7 +97,6 @@ const REPORT_FIELDS = {
     { label: "Scope", name: "scope", type: "textarea" },
   ],
   "Arrest Warrant": [
-    { label: "Warrant ID", name: "warrantId", type: "text" },
     { label: "Judge", name: "judge", type: "text" },
     { label: "Subject", name: "subject", type: "text" },
     { label: "Charges", name: "charges", type: "text" },
@@ -105,6 +114,7 @@ const REPORT_FIELDS = {
 };
 
 const REPORT_ID_KEY = "rcpdNextReportId";
+const AUDIT_LOG_KEY = "rcpdAuditLog";
 
 const state = {
   user: null,
@@ -112,7 +122,27 @@ const state = {
   reports: [],
   nextReportId: 1,
   pendingReportId: "0000001",
+  modalReportId: null,
+  auditLog: [],
 };
+
+function getUserTag() {
+  return state.user && state.user.tag ? state.user.tag.toLowerCase() : "";
+}
+
+function canViewAllReports() {
+  const tag = getUserTag();
+  return tag === "admin" || tag === "supervisor";
+}
+
+function canApproveReports() {
+  const tag = getUserTag();
+  return tag === "admin" || tag === "supervisor";
+}
+
+function canAccessAuditLog() {
+  return getUserTag() === "admin";
+}
 
 function setSessionText() {
   if (!state.user) {
@@ -120,13 +150,53 @@ function setSessionText() {
     return;
   }
 
-  sessionEl.textContent = `${state.user.name} | ${state.user.role}`;
+  sessionEl.textContent = "";
+  const label = document.createElement("span");
+  label.textContent = `${state.user.name} | ${state.user.role}`;
+  sessionEl.appendChild(label);
+
+  if (state.user.tag) {
+    const badge = document.createElement("span");
+    badge.className = `tag-badge tag-${state.user.tag
+      .toLowerCase()
+      .replace(/\s+/g, "-")}`;
+    badge.textContent = state.user.tag;
+    sessionEl.appendChild(badge);
+  }
+}
+
+function setCallsignText() {
+  if (!terminalIdEl) {
+    return;
+  }
+
+  if (!state.user) {
+    terminalIdEl.textContent = "UNASSIGNED";
+    return;
+  }
+
+  terminalIdEl.textContent = state.user.callsign || "UNASSIGNED";
+}
+
+function setCommandVisibility() {
+  if (!commandBar) {
+    return;
+  }
+  const isAdmin =
+    state.user && state.user.tag && state.user.tag.toLowerCase() === "admin";
+  commandBar.classList.toggle("hidden", !isAdmin);
+  if (auditBtn) {
+    auditBtn.classList.toggle("hidden", !isAdmin);
+  }
 }
 
 function showPanel(panel) {
   loginPanel.classList.add("hidden");
   dashboardPanel.classList.add("hidden");
   reportPanel.classList.add("hidden");
+  if (auditPanel) {
+    auditPanel.classList.add("hidden");
+  }
   panel.classList.remove("hidden");
 }
 
@@ -170,18 +240,97 @@ function saveReports() {
   localStorage.setItem("rcpdReports", JSON.stringify(state.reports));
 }
 
+function loadAuditLog() {
+  const saved = localStorage.getItem(AUDIT_LOG_KEY);
+  if (saved) {
+    state.auditLog = JSON.parse(saved);
+  }
+}
+
+function saveAuditLog() {
+  localStorage.setItem(AUDIT_LOG_KEY, JSON.stringify(state.auditLog));
+}
+
+function addAuditEntry(action, detail) {
+  if (!state.user) {
+    return;
+  }
+  state.auditLog.unshift({
+    id: crypto.randomUUID(),
+    time: new Date().toISOString(),
+    userName: state.user.name,
+    userUsername: state.user.username,
+    action,
+    detail,
+  });
+  state.auditLog = state.auditLog.slice(0, 200);
+  saveAuditLog();
+  renderAuditLog();
+}
+
+function buildSummary(data) {
+  const entries = Object.entries(data).filter(([key]) => key !== "reportId");
+  const firstValue = entries.length ? String(entries[0][1]).trim() : "";
+  return firstValue || "Report saved";
+}
+
+function truncateSummary(text, maxLength = 28) {
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return `${text.slice(0, maxLength - 3)}...`;
+}
+
+function clearAllReports() {
+  state.reports = [];
+  state.nextReportId = 1;
+  state.pendingReportId = formatReportId(state.nextReportId);
+  localStorage.removeItem("rcpdReports");
+  saveReportSequence();
+  renderRecentReports();
+  addAuditEntry("Clear Reports", "All reports cleared");
+}
+
+function setCommandStatus(message) {
+  if (commandStatus) {
+    commandStatus.textContent = message;
+  }
+}
+
+function runCommand(rawValue) {
+  const command = rawValue.trim().toLowerCase();
+  if (!command) {
+    return;
+  }
+
+  if (command === "clearreports") {
+    clearAllReports();
+    setCommandStatus("Reports cleared.");
+    return;
+  }
+
+  setCommandStatus("Unknown command.");
+}
+
 function renderRecentReports() {
   reportTableBody.innerHTML = "";
   const query = reportSearch ? reportSearch.value.trim().toLowerCase() : "";
   const filtered = state.reports.filter((report) => {
+    if (!canViewAllReports()) {
+      const username = state.user ? state.user.username : "";
+      if (report.createdByUsername !== username) {
+        return false;
+      }
+    }
     if (!query) {
       return true;
     }
+    const createdByName = report.createdByName || report.createdBy || "Unknown";
     const haystack = [
       report.reportId,
       report.type,
       report.summary,
-      report.createdBy,
+      createdByName,
       report.createdAt,
     ]
       .join(" ")
@@ -204,17 +353,196 @@ function renderRecentReports() {
     const displayId = report.reportId || report.id || "--------";
     const createdDate = new Date(report.createdAt).toLocaleDateString();
 
+    row.dataset.reportId = displayId;
+
+    const createdByName = report.createdByName || report.createdBy || "Unknown";
+
+    const status = report.status || "Submitted";
+    const statusClass = status.toLowerCase() === "approved" ? "approved" : "";
+
     row.innerHTML = `
       <td>${displayId}</td>
       <td>${report.type}</td>
       <td>${createdDate}</td>
-      <td>${report.createdBy}</td>
-      <td>${report.summary}</td>
-      <td><span class="status-pill">Submitted</span></td>
+      <td>${createdByName}</td>
+      <td>${truncateSummary(report.summary)}</td>
+      <td><span class="status-pill ${statusClass}">${status}</span></td>
     `;
 
     reportTableBody.appendChild(row);
   });
+}
+
+function renderAuditLog() {
+  if (!auditTableBody) {
+    return;
+  }
+  auditTableBody.innerHTML = "";
+  if (!state.auditLog.length) {
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = 4;
+    cell.textContent = "No audit entries yet.";
+    row.appendChild(cell);
+    auditTableBody.appendChild(row);
+    return;
+  }
+
+  state.auditLog.forEach((entry) => {
+    const row = document.createElement("tr");
+    const time = new Date(entry.time).toLocaleString();
+    row.innerHTML = `
+      <td>${time}</td>
+      <td>${entry.userName}</td>
+      <td>${entry.action}</td>
+      <td>${entry.detail}</td>
+    `;
+    auditTableBody.appendChild(row);
+  });
+}
+
+  function openReportModal(report) {
+    if (!reportModal || !modalTitle || !modalBody || !modalMeta) {
+      return;
+    }
+
+    state.modalReportId = report.reportId;
+    if (modalApprove) {
+      const alreadyApproved = (report.status || "Submitted").toLowerCase() === "approved";
+      modalApprove.classList.toggle("hidden", !canApproveReports() || alreadyApproved);
+    }
+    if (modalExport) {
+      modalExport.classList.remove("hidden");
+    }
+
+    modalTitle.textContent = `${report.type} | ${report.reportId}`;
+    const createdDate = new Date(report.createdAt).toLocaleString();
+    const createdByName = report.createdByName || report.createdBy || "Unknown";
+    modalMeta.textContent = `${createdDate} | ${createdByName}`;
+    modalBody.innerHTML = "";
+
+    const fields = REPORT_FIELDS[report.type] || [];
+    const displayFields = [
+      { label: "Report ID", value: report.reportId },
+      { label: "Type", value: report.type },
+      { label: "Status", value: report.status || "Submitted" },
+    ];
+
+    fields.forEach((field) => {
+      const value = report.data ? report.data[field.name] : "";
+      displayFields.push({ label: field.label, value: value || "--" });
+    });
+
+    displayFields.forEach((item) => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "modal-field";
+      const label = document.createElement("div");
+      label.className = "modal-label";
+      label.textContent = item.label;
+      const value = document.createElement("div");
+      value.className = "modal-value";
+      value.textContent = item.value;
+      wrapper.appendChild(label);
+      wrapper.appendChild(value);
+      modalBody.appendChild(wrapper);
+    });
+
+    reportModal.classList.remove("hidden");
+  }
+
+  function closeReportModal() {
+    if (reportModal) {
+      reportModal.classList.add("hidden");
+    }
+    state.modalReportId = null;
+  }
+
+function getReportById(reportId) {
+  return state.reports.find((item) => item.reportId === reportId);
+}
+
+function approveReport() {
+  if (!canApproveReports()) {
+    return;
+  }
+  if (!state.modalReportId) {
+    return;
+  }
+  const report = getReportById(state.modalReportId);
+  if (!report) {
+    return;
+  }
+  report.status = "Approved";
+  report.approvedAt = new Date().toISOString();
+  report.approvedByName = state.user ? state.user.name : "Unknown";
+  report.approvedByUsername = state.user ? state.user.username : "";
+  saveReports();
+  addAuditEntry("Approve Report", `${report.reportId} ${report.type}`);
+  renderRecentReports();
+  openReportModal(report);
+}
+
+function exportReport() {
+  if (!state.modalReportId) {
+    return;
+  }
+  const report = getReportById(state.modalReportId);
+  if (!report) {
+    return;
+  }
+  const jspdf = window.jspdf;
+  if (!jspdf || !jspdf.jsPDF) {
+    return;
+  }
+
+  const doc = new jspdf.jsPDF({ unit: "pt", format: "letter" });
+  const margin = 40;
+  let y = margin;
+  const lineHeight = 16;
+
+  const safeType = report.type.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const createdDate = new Date(report.createdAt).toLocaleString();
+  const createdByName = report.createdByName || report.createdBy || "Unknown";
+  const approvedBy = report.approvedByName || "--";
+  const approvedAt = report.approvedAt
+    ? new Date(report.approvedAt).toLocaleString()
+    : "--";
+
+  doc.setFontSize(16);
+  doc.text(`${report.type} | ${report.reportId}`, margin, y);
+  y += lineHeight + 4;
+
+  doc.setFontSize(10);
+  doc.text(`Created: ${createdDate}`, margin, y);
+  y += lineHeight;
+  doc.text(`Officer: ${createdByName}`, margin, y);
+  y += lineHeight;
+  doc.text(`Status: ${report.status || "Submitted"}`, margin, y);
+  y += lineHeight;
+  doc.text(`Approved By: ${approvedBy}`, margin, y);
+  y += lineHeight;
+  doc.text(`Approved At: ${approvedAt}`, margin, y);
+  y += lineHeight + 6;
+
+  const fields = REPORT_FIELDS[report.type] || [];
+  fields.forEach((field) => {
+    const value = report.data ? report.data[field.name] : "";
+    const displayValue = value ? String(value) : "--";
+    doc.setFont(undefined, "bold");
+    doc.text(`${field.label}:`, margin, y);
+    doc.setFont(undefined, "normal");
+    const wrapped = doc.splitTextToSize(displayValue, 520);
+    y += lineHeight;
+    doc.text(wrapped, margin, y);
+    y += wrapped.length * lineHeight + 4;
+    if (y > 720) {
+      doc.addPage();
+      y = margin;
+    }
+  });
+
+  doc.save(`${report.reportId}-${safeType}.pdf`);
+  addAuditEntry("Export Report", `${report.reportId} ${report.type}`);
 }
 
 function buildReportButtons() {
@@ -228,8 +556,12 @@ function buildReportButtons() {
     reportButtons.appendChild(button);
   });
 
-  document.querySelectorAll(".actions button").forEach((button) => {
-    button.addEventListener("click", () => openReport(button.dataset.report));
+  document.querySelectorAll(".cad-actions button").forEach((button) => {
+    const reportName = button.dataset.report;
+    if (!reportName) {
+      return;
+    }
+    button.addEventListener("click", () => openReport(reportName));
   });
 }
 
@@ -279,6 +611,9 @@ function buildReportFields(reportName) {
 function handleLogin(user) {
   state.user = user;
   setSessionText();
+  setCallsignText();
+  setCommandVisibility();
+  addAuditEntry("Login", `${user.name}`);
   renderRecentReports();
   showPanel(dashboardPanel);
 }
@@ -319,8 +654,13 @@ loginForm.addEventListener("submit", async (event) => {
 });
 
 logoutBtn.addEventListener("click", () => {
+  if (state.user) {
+    addAuditEntry("Logout", `${state.user.name}`);
+  }
   state.user = null;
   setSessionText();
+  setCallsignText();
+  setCommandVisibility();
   showPanel(loginPanel);
 });
 
@@ -337,7 +677,7 @@ reportForm.addEventListener("submit", (event) => {
   const formData = new FormData(reportForm);
   const data = Object.fromEntries(formData.entries());
 
-  const summary = Object.values(data)[0] || "Report saved";
+  const summary = buildSummary(data);
   const reportId = state.pendingReportId;
   state.reports.push({
     id: reportId,
@@ -345,14 +685,16 @@ reportForm.addEventListener("submit", (event) => {
     type: state.activeReport,
     summary,
     data,
+    status: "Submitted",
     createdAt: new Date().toISOString(),
-    createdBy: state.user ? state.user.name : "Unknown",
+    createdByName: state.user ? state.user.name : "Unknown",
+    createdByUsername: state.user ? state.user.username : "",
   });
 
   state.nextReportId += 1;
   saveReportSequence();
-
   saveReports();
+  addAuditEntry("Create Report", `${reportId} ${state.activeReport}`);
   renderRecentReports();
   reportSuccess.textContent = "Report saved locally.";
   reportForm.reset();
@@ -360,11 +702,83 @@ reportForm.addEventListener("submit", (event) => {
 
 loadSavedReports();
 loadReportSequence();
+loadAuditLog();
 setSessionText();
+setCallsignText();
+setCommandVisibility();
 buildReportButtons();
 updateLocalTime();
 setInterval(updateLocalTime, 1000);
+renderAuditLog();
 
 if (reportSearch) {
   reportSearch.addEventListener("input", renderRecentReports);
 }
+
+if (reportTableBody) {
+  reportTableBody.addEventListener("click", (event) => {
+    const row = event.target.closest("tr");
+    if (!row || !row.dataset.reportId) {
+      return;
+    }
+    const report = state.reports.find(
+      (item) => item.reportId === row.dataset.reportId
+    );
+    if (report) {
+      openReportModal(report);
+    }
+  });
+}
+
+if (auditBtn) {
+  auditBtn.addEventListener("click", () => {
+    if (!canAccessAuditLog()) {
+      return;
+    }
+    renderAuditLog();
+    showPanel(auditPanel);
+  });
+}
+
+if (auditBackBtn) {
+  auditBackBtn.addEventListener("click", () => {
+    showPanel(dashboardPanel);
+  });
+}
+
+if (modalClose) {
+  modalClose.addEventListener("click", closeReportModal);
+}
+
+if (modalApprove) {
+  modalApprove.addEventListener("click", approveReport);
+}
+
+if (modalExport) {
+  modalExport.addEventListener("click", exportReport);
+}
+
+if (reportModal) {
+  reportModal.addEventListener("click", (event) => {
+    if (event.target === reportModal) {
+      closeReportModal();
+    }
+  });
+}
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeReportModal();
+  }
+});
+
+if (commandInput) {
+  commandInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      runCommand(commandInput.value);
+      commandInput.value = "";
+    }
+  });
+}
+

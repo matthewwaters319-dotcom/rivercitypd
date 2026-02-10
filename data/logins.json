@@ -4,7 +4,25 @@
       "username": "testing",
       "password": "testing",
       "name": "Kasey Krivan",
-      "role": "Officer"
-    }
+      "role": "Officer",
+      "callsign": "903",
+      "tag": "admin"
+    },
+    {
+  "username": "testingsupervisor",
+  "password": "Patrol#101",
+  "name": "Avery Cole",
+  "role": "Officer",
+  "callsign": "1A-21",
+  "tag": "Supervisor"
+},
+{
+  "username": "testingpatrol",
+  "password": "Patrol#101",
+  "name": "Avery Cole",
+  "role": "Officer",
+  "callsign": "1A-21",
+  "tag": "Patrol Staff"
+}
   ]
 }
