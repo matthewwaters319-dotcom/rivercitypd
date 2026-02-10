@@ -1,7 +1,18 @@
 {
   "name": "rivercitypd",
   "compatibility_date": "2026-02-10",
+  "main": "worker.js",
   "assets": {
     "directory": "."
-  }
+  },
+  "kv_namespaces": [
+    {
+      "binding": "REPORTS",
+      "id": "6e118c6e93df45218ba20f2a562d1737"
+    },
+    {
+      "binding": "AUDIT",
+      "id": "3b8cc50864b74eabaa638914df72fe5c"
+    }
+  ]
 }

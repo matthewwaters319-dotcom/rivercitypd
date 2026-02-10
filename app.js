@@ -1,6 +1,7 @@
 const loginPanel = document.getElementById("login-panel");
 const dashboardPanel = document.getElementById("dashboard-panel");
 const reportPanel = document.getElementById("report-panel");
+const auditPanel = document.getElementById("audit-panel");
 const loginForm = document.getElementById("login-form");
 const loginError = document.getElementById("login-error");
 const reportButtons = document.getElementById("report-buttons");
@@ -12,6 +13,8 @@ const sessionEl = document.getElementById("session");
 const reportTableBody = document.getElementById("report-table-body");
 const logoutBtn = document.getElementById("logout-btn");
 const auditBtn = document.getElementById("audit-btn");
+const auditBackBtn = document.getElementById("audit-back-btn");
+const auditTableBody = document.getElementById("audit-table-body");
 const backBtn = document.getElementById("back-btn");
 const cancelReport = document.getElementById("cancel-report");
 const localTimeEl = document.getElementById("local-time");
@@ -27,15 +30,10 @@ const modalExport = document.getElementById("modal-export");
 const commandBar = document.getElementById("command-bar");
 const commandInput = document.getElementById("command-input");
 const commandStatus = document.getElementById("command-status");
-const auditPanel = document.getElementById("audit-panel");
-const auditBackBtn = document.getElementById("audit-back-btn");
-const auditTableBody = document.getElementById("audit-table-body");
 
-const shiftStatus = {
-  callTaker: document.getElementById("shift-calltaker"),
-  dispatcher: document.getElementById("shift-dispatcher"),
-  unit: document.getElementById("shift-unit"),
-};
+const REPORT_API = "/api/reports";
+const AUDIT_API = "/api/audit";
+const COMMAND_API = "/api/commands";
 
 const REPORTS = [
   "Tresspass Notice",
@@ -112,9 +110,6 @@ const REPORT_FIELDS = {
     { label: "Narrative", name: "narrative", type: "textarea" },
   ],
 };
-
-const REPORT_ID_KEY = "rcpdNextReportId";
-const AUDIT_LOG_KEY = "rcpdAuditLog";
 
 const state = {
   user: null,
@@ -208,24 +203,73 @@ async function loadLogins() {
   return response.json();
 }
 
-function loadSavedReports() {
-  const saved = localStorage.getItem("rcpdReports");
-  if (saved) {
-    state.reports = JSON.parse(saved);
+async function fetchReports() {
+  const response = await fetch(REPORT_API, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error("Unable to load reports");
   }
-}
-
-function loadReportSequence() {
-  const stored = localStorage.getItem(REPORT_ID_KEY);
-  const parsed = Number.parseInt(stored, 10);
-  if (!Number.isNaN(parsed) && parsed > 0) {
-    state.nextReportId = parsed;
-  }
+  const data = await response.json();
+  state.reports = Array.isArray(data.reports) ? data.reports : [];
+  const nextId = Number.parseInt(data.nextReportId, 10);
+  state.nextReportId = Number.isNaN(nextId) ? 1 : nextId;
   state.pendingReportId = formatReportId(state.nextReportId);
 }
 
-function saveReportSequence() {
-  localStorage.setItem(REPORT_ID_KEY, String(state.nextReportId));
+async function persistReports() {
+  const payload = {
+    reports: state.reports,
+    nextReportId: state.nextReportId,
+  };
+  const response = await fetch(REPORT_API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    throw new Error("Unable to save reports");
+  }
+}
+
+async function fetchAuditLog() {
+  const response = await fetch(AUDIT_API, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error("Unable to load audit log");
+  }
+  const data = await response.json();
+  state.auditLog = Array.isArray(data.entries) ? data.entries : [];
+}
+
+async function appendAuditEntry(action, detail) {
+  if (!state.user) {
+    return;
+  }
+  await fetch(`${AUDIT_API}/append`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      userName: state.user.name,
+      userUsername: state.user.username,
+      action,
+      detail,
+    }),
+  });
+  await fetchAuditLog();
+  renderAuditLog();
+}
+
+async function initializeReports() {
+  try {
+    await fetchReports();
+    renderRecentReports();
+  } catch (error) {
+    reportTableBody.innerHTML = "";
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = 6;
+    cell.textContent = "Unable to load reports. Start the server.";
+    row.appendChild(cell);
+    reportTableBody.appendChild(row);
+  }
 }
 
 function formatReportId(value) {
@@ -234,38 +278,6 @@ function formatReportId(value) {
 
 function reserveNextReportId() {
   state.pendingReportId = formatReportId(state.nextReportId);
-}
-
-function saveReports() {
-  localStorage.setItem("rcpdReports", JSON.stringify(state.reports));
-}
-
-function loadAuditLog() {
-  const saved = localStorage.getItem(AUDIT_LOG_KEY);
-  if (saved) {
-    state.auditLog = JSON.parse(saved);
-  }
-}
-
-function saveAuditLog() {
-  localStorage.setItem(AUDIT_LOG_KEY, JSON.stringify(state.auditLog));
-}
-
-function addAuditEntry(action, detail) {
-  if (!state.user) {
-    return;
-  }
-  state.auditLog.unshift({
-    id: crypto.randomUUID(),
-    time: new Date().toISOString(),
-    userName: state.user.name,
-    userUsername: state.user.username,
-    action,
-    detail,
-  });
-  state.auditLog = state.auditLog.slice(0, 200);
-  saveAuditLog();
-  renderAuditLog();
 }
 
 function buildSummary(data) {
@@ -281,31 +293,40 @@ function truncateSummary(text, maxLength = 28) {
   return `${text.slice(0, maxLength - 3)}...`;
 }
 
-function clearAllReports() {
-  state.reports = [];
-  state.nextReportId = 1;
-  state.pendingReportId = formatReportId(state.nextReportId);
-  localStorage.removeItem("rcpdReports");
-  saveReportSequence();
-  renderRecentReports();
-  addAuditEntry("Clear Reports", "All reports cleared");
-}
-
 function setCommandStatus(message) {
   if (commandStatus) {
     commandStatus.textContent = message;
   }
 }
 
-function runCommand(rawValue) {
+async function runCommand(rawValue) {
   const command = rawValue.trim().toLowerCase();
   if (!command) {
     return;
   }
 
   if (command === "clearreports") {
-    clearAllReports();
-    setCommandStatus("Reports cleared.");
+    try {
+      const response = await fetch(COMMAND_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          command,
+          userName: state.user ? state.user.name : "",
+          userUsername: state.user ? state.user.username : "",
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Command failed");
+      }
+      await fetchReports();
+      renderRecentReports();
+      await fetchAuditLog();
+      renderAuditLog();
+      setCommandStatus("Reports cleared.");
+    } catch (error) {
+      setCommandStatus("Command failed.");
+    }
     return;
   }
 
@@ -401,61 +422,65 @@ function renderAuditLog() {
   });
 }
 
-  function openReportModal(report) {
-    if (!reportModal || !modalTitle || !modalBody || !modalMeta) {
-      return;
-    }
-
-    state.modalReportId = report.reportId;
-    if (modalApprove) {
-      const alreadyApproved = (report.status || "Submitted").toLowerCase() === "approved";
-      modalApprove.classList.toggle("hidden", !canApproveReports() || alreadyApproved);
-    }
-    if (modalExport) {
-      modalExport.classList.remove("hidden");
-    }
-
-    modalTitle.textContent = `${report.type} | ${report.reportId}`;
-    const createdDate = new Date(report.createdAt).toLocaleString();
-    const createdByName = report.createdByName || report.createdBy || "Unknown";
-    modalMeta.textContent = `${createdDate} | ${createdByName}`;
-    modalBody.innerHTML = "";
-
-    const fields = REPORT_FIELDS[report.type] || [];
-    const displayFields = [
-      { label: "Report ID", value: report.reportId },
-      { label: "Type", value: report.type },
-      { label: "Status", value: report.status || "Submitted" },
-    ];
-
-    fields.forEach((field) => {
-      const value = report.data ? report.data[field.name] : "";
-      displayFields.push({ label: field.label, value: value || "--" });
-    });
-
-    displayFields.forEach((item) => {
-      const wrapper = document.createElement("div");
-      wrapper.className = "modal-field";
-      const label = document.createElement("div");
-      label.className = "modal-label";
-      label.textContent = item.label;
-      const value = document.createElement("div");
-      value.className = "modal-value";
-      value.textContent = item.value;
-      wrapper.appendChild(label);
-      wrapper.appendChild(value);
-      modalBody.appendChild(wrapper);
-    });
-
-    reportModal.classList.remove("hidden");
+function openReportModal(report) {
+  if (!reportModal || !modalTitle || !modalBody || !modalMeta) {
+    return;
   }
 
-  function closeReportModal() {
-    if (reportModal) {
-      reportModal.classList.add("hidden");
-    }
-    state.modalReportId = null;
+  state.modalReportId = report.reportId;
+  if (modalApprove) {
+    const alreadyApproved =
+      (report.status || "Submitted").toLowerCase() === "approved";
+    modalApprove.classList.toggle(
+      "hidden",
+      !canApproveReports() || alreadyApproved
+    );
   }
+  if (modalExport) {
+    modalExport.classList.remove("hidden");
+  }
+
+  modalTitle.textContent = `${report.type} | ${report.reportId}`;
+  const createdDate = new Date(report.createdAt).toLocaleString();
+  const createdByName = report.createdByName || report.createdBy || "Unknown";
+  modalMeta.textContent = `${createdDate} | ${createdByName}`;
+  modalBody.innerHTML = "";
+
+  const fields = REPORT_FIELDS[report.type] || [];
+  const displayFields = [
+    { label: "Report ID", value: report.reportId },
+    { label: "Type", value: report.type },
+    { label: "Status", value: report.status || "Submitted" },
+  ];
+
+  fields.forEach((field) => {
+    const value = report.data ? report.data[field.name] : "";
+    displayFields.push({ label: field.label, value: value || "--" });
+  });
+
+  displayFields.forEach((item) => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "modal-field";
+    const label = document.createElement("div");
+    label.className = "modal-label";
+    label.textContent = item.label;
+    const value = document.createElement("div");
+    value.className = "modal-value";
+    value.textContent = item.value;
+    wrapper.appendChild(label);
+    wrapper.appendChild(value);
+    modalBody.appendChild(wrapper);
+  });
+
+  reportModal.classList.remove("hidden");
+}
+
+function closeReportModal() {
+  if (reportModal) {
+    reportModal.classList.add("hidden");
+  }
+  state.modalReportId = null;
+}
 
 function getReportById(reportId) {
   return state.reports.find((item) => item.reportId === reportId);
@@ -476,10 +501,15 @@ function approveReport() {
   report.approvedAt = new Date().toISOString();
   report.approvedByName = state.user ? state.user.name : "Unknown";
   report.approvedByUsername = state.user ? state.user.username : "";
-  saveReports();
-  addAuditEntry("Approve Report", `${report.reportId} ${report.type}`);
-  renderRecentReports();
-  openReportModal(report);
+  persistReports()
+    .then(async () => {
+      await appendAuditEntry("Approve Report", `${report.reportId} ${report.type}`);
+      renderRecentReports();
+      openReportModal(report);
+    })
+    .catch(() => {
+      setCommandStatus("Unable to approve report.");
+    });
 }
 
 function exportReport() {
@@ -542,7 +572,11 @@ function exportReport() {
   });
 
   doc.save(`${report.reportId}-${safeType}.pdf`);
-  addAuditEntry("Export Report", `${report.reportId} ${report.type}`);
+  appendAuditEntry("Export Report", `${report.reportId} ${report.type}`).catch(
+    () => {
+      setCommandStatus("Audit log unavailable.");
+    }
+  );
 }
 
 function buildReportButtons() {
@@ -613,7 +647,9 @@ function handleLogin(user) {
   setSessionText();
   setCallsignText();
   setCommandVisibility();
-  addAuditEntry("Login", `${user.name}`);
+  appendAuditEntry("Login", `${user.name}`).catch(() => {
+    setCommandStatus("Audit log unavailable.");
+  });
   renderRecentReports();
   showPanel(dashboardPanel);
 }
@@ -655,7 +691,9 @@ loginForm.addEventListener("submit", async (event) => {
 
 logoutBtn.addEventListener("click", () => {
   if (state.user) {
-    addAuditEntry("Logout", `${state.user.name}`);
+    appendAuditEntry("Logout", `${state.user.name}`).catch(() => {
+      setCommandStatus("Audit log unavailable.");
+    });
   }
   state.user = null;
   setSessionText();
@@ -672,7 +710,7 @@ cancelReport.addEventListener("click", () => {
   showPanel(dashboardPanel);
 });
 
-reportForm.addEventListener("submit", (event) => {
+reportForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const formData = new FormData(reportForm);
   const data = Object.fromEntries(formData.entries());
@@ -692,24 +730,35 @@ reportForm.addEventListener("submit", (event) => {
   });
 
   state.nextReportId += 1;
-  saveReportSequence();
-  saveReports();
-  addAuditEntry("Create Report", `${reportId} ${state.activeReport}`);
-  renderRecentReports();
-  reportSuccess.textContent = "Report saved locally.";
-  reportForm.reset();
+  try {
+    await persistReports();
+    await appendAuditEntry("Create Report", `${reportId} ${state.activeReport}`);
+    renderRecentReports();
+    reportSuccess.textContent = "Report saved locally.";
+    reportForm.reset();
+  } catch (error) {
+    reportSuccess.textContent = "Unable to save report. Start the server.";
+  }
 });
 
-loadSavedReports();
-loadReportSequence();
-loadAuditLog();
 setSessionText();
 setCallsignText();
 setCommandVisibility();
 buildReportButtons();
 updateLocalTime();
 setInterval(updateLocalTime, 1000);
-renderAuditLog();
+initializeReports();
+fetchAuditLog().then(renderAuditLog).catch(() => {
+  if (auditTableBody) {
+    auditTableBody.innerHTML = "";
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = 4;
+    cell.textContent = "Unable to load audit log. Start the server.";
+    row.appendChild(cell);
+    auditTableBody.appendChild(row);
+  }
+});
 
 if (reportSearch) {
   reportSearch.addEventListener("input", renderRecentReports);
@@ -731,11 +780,16 @@ if (reportTableBody) {
 }
 
 if (auditBtn) {
-  auditBtn.addEventListener("click", () => {
+  auditBtn.addEventListener("click", async () => {
     if (!canAccessAuditLog()) {
       return;
     }
-    renderAuditLog();
+    try {
+      await fetchAuditLog();
+      renderAuditLog();
+    } catch (error) {
+      renderAuditLog();
+    }
     showPanel(auditPanel);
   });
 }
@@ -776,9 +830,8 @@ if (commandInput) {
   commandInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       event.preventDefault();
-      runCommand(commandInput.value);
+      void runCommand(commandInput.value);
       commandInput.value = "";
     }
   });
 }
-
