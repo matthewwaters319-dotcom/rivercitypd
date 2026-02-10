@@ -1,7 +1,7 @@
 {
   "users": [
     {
-      "username": "2901",
+      "username": "901",
       "password": "TravisChief2901Kane",
       "name": "Travis Kane",
       "role": "Chief of Police",
@@ -9,16 +9,16 @@
       "tag": "admin"
     },
     {
-      "username": "2902",
-      "password": "2902DeputyChiefColtonRivers",
+      "username": "902",
+      "password": "902DeputyChiefColtonRivers",
       "name": "Colton Rivers",
       "role": "Assistant Chief",
       "callsign": "902",
       "tag": "admin"
     },
     {
-      "username": "2903",
-      "password": "2903CaptainKaseyKrivan",
+      "username": "903",
+      "password": "903CaptainKaseyKrivan",
       "name": "Kasey Krivan",
       "role": "Captain",
       "callsign": "903",
