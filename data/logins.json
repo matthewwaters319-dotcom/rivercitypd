@@ -1,28 +1,28 @@
 {
   "users": [
     {
-      "username": "testing",
-      "password": "testing",
-      "name": "Kasey Krivan",
-      "role": "Officer",
-      "callsign": "903",
+      "username": "2901",
+      "password": "TravisChief2901Kane",
+      "name": "Travis Kane",
+      "role": "Chief of Police",
+      "callsign": "901",
       "tag": "admin"
     },
     {
-  "username": "testingsupervisor",
-  "password": "Patrol#101",
-  "name": "Avery Cole",
-  "role": "Officer",
-  "callsign": "1A-21",
-  "tag": "Supervisor"
-},
-{
-  "username": "testingpatrol",
-  "password": "Patrol#101",
-  "name": "Avery Cole",
-  "role": "Officer",
-  "callsign": "1A-21",
-  "tag": "Patrol Staff"
-}
+      "username": "2902",
+      "password": "2902DeputyChiefColtonRivers",
+      "name": "Colton Rivers",
+      "role": "Assistant Chief",
+      "callsign": "902",
+      "tag": "admin"
+    },
+    {
+      "username": "2903",
+      "password": "2903CaptainKaseyKrivan",
+      "name": "Kasey Krivan",
+      "role": "Captain",
+      "callsign": "903",
+      "tag": "admin"
+    }
   ]
 }
